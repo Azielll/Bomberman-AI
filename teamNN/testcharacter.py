@@ -13,7 +13,7 @@ class TestCharacter(CharacterEntity):
     # Initial state!
     # (I want to add more states in the future...)
     state = "goal"
-    search_depth = 7
+    search_depth = 4
 
     action = "move"
 
@@ -42,7 +42,7 @@ class TestCharacter(CharacterEntity):
         self.num_steps = self.num_steps + 1
 
         if (self.state == "mon dodge"):
-            time.sleep(2.5)
+            time.sleep(0.1)
         else:
             time.sleep(0.1)
 
@@ -215,6 +215,8 @@ class TestCharacter(CharacterEntity):
             # Calculate the distance to the exit from the current cell
             exit_dist = (math.sqrt(((self.exitie[0] - wrld.me(self).x)**2) + ((self.exitie[1] - wrld.me(self).y)**2)))
 
+            pathy_len = len(self.a_star(wrld, wrld.me(self).x, wrld.me(self).y))
+
             # Calculate the distance of the closest monster
             closey_mon = math.sqrt((wrld.height()**2) + (wrld.width()**2)) + 0.5
             for key in wrld.monsters:
@@ -224,7 +226,8 @@ class TestCharacter(CharacterEntity):
                         closey_mon = mon_dist
                         
             # Get the total value
-            return  (1.0 *-exit_dist) - (0.5 * closey_mon) - self.num_steps
+            # return  (1.0 *-exit_dist) - (0.5 * closey_mon) - self.num_steps
+            return  (0.75 * -pathy_len) - (0.5 * closey_mon) - self.num_steps
         
 
 ######################################################
