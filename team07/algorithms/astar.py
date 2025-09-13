@@ -2,6 +2,26 @@
 A* pathfinding algorithm for Bomberman AI
 """
 from .base import BombermanAlgorithm
+import heapq
+
+class Node:
+    """Node for A* pathfinding"""
+    def __init__(self, x, y, g_cost, h_cost, parent=None):
+        self.x = x
+        self.y = y
+        self.g_cost = g_cost
+        self.h_cost = h_cost
+        self.f_cost = g_cost + h_cost
+        self.parent = parent
+    
+    def __lt__(self, other):
+        return self.f_cost < other.f_cost
+    
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+    
+    def __hash__(self):
+        return hash((self.x, self.y))
 
 class AStarAlgorithm(BombermanAlgorithm):
     """
@@ -15,10 +35,21 @@ class AStarAlgorithm(BombermanAlgorithm):
         """
         Get next action using A* pathfinding.
         """
-        # Step 3: Test heuristic function
-        self.test_heuristic_function(wrld, character)
+        # If no exit, do nothing
+        if not wrld.exitcell:
+            return (0, 0)
         
-        # For now, just do nothing
+        # Find path to exit
+        path = self.find_path(wrld, character)
+        
+        # If path found, return first move
+        if path and len(path) > 1:
+            next_pos = path[1]  # First step in path
+            dx = next_pos[0] - character.x
+            dy = next_pos[1] - character.y
+            return (dx, dy)
+        
+        # No path found or already at goal
         return (0, 0)
     
     def is_valid_position(self, wrld, x, y):
@@ -43,51 +74,96 @@ class AStarAlgorithm(BombermanAlgorithm):
         dx = abs(pos1[0] - pos2[0])
         dy = abs(pos1[1] - pos2[1])
         return max(dx, dy)
-        def test_heuristic_function(self, wrld, character):
+    
+    def add_to_open_set(self, open_set, node):
+        """Add a node to the open set (priority queue)."""
+        heapq.heappush(open_set, node)
+    
+    def get_best_node(self, open_set):
+        """Get the node with lowest f_cost from open set."""
+        if not open_set:
+            return None
+        return heapq.heappop(open_set)
+    
+    def reconstruct_path(self, goal_node):
+        """Reconstruct path from goal node back to start using parent pointers."""
+        path = []
+        current = goal_node
+        
+        # Trace back from goal to start
+        while current is not None:
+            path.append((current.x, current.y))
+            current = current.parent
+        
+        # Reverse to get path from start to goal
+        path.reverse()
+        return path
+    
+    def find_path(self, wrld, character):
         """
-        Step 3: Test heuristic function with known examples.
+        Find path from character position to exit using A*.
+        Returns list of (x, y) coordinates representing the path.
         """
-        print("=== HEURISTIC TESTING ===")
+        # Basic setup
+        start = (character.x, character.y)
+        goal = wrld.exitcell
         
-        # Test 1: Current position to exit
-        if wrld.exitcell:
-            exit_x, exit_y = wrld.exitcell
-            current_distance = self.heuristic((character.x, character.y), (exit_x, exit_y))
-            print(f"Current position ({character.x}, {character.y}) to exit ({exit_x}, {exit_y}): {current_distance}")
+        # If already at goal, return just the start position
+        if start == goal:
+            return [start]
         
-        # Test 2: Known examples
-        test_cases = [
-            ((0, 0), (0, 0), 0),      # Same position
-            ((0, 0), (1, 0), 1),      # One step right
-            ((0, 0), (0, 1), 1),      # One step down
-            ((0, 0), (1, 1), 1),      # One step diagonal
-            ((0, 0), (3, 0), 3),      # Three steps right
-            ((0, 0), (0, 3), 3),      # Three steps down
-            ((0, 0), (3, 3), 3),      # Three steps diagonal
-            ((0, 0), (2, 3), 3),      # Mixed: max(2,3) = 3
-            ((0, 0), (5, 2), 5),      # Mixed: max(5,2) = 5
-        ]
+        # Initialize open and closed sets
+        open_set = []           # Priority queue of nodes to explore
+        closed_set = set()      # Set of positions we've already explored
         
-        print("\nTesting known examples:")
-        all_correct = True
-        for pos1, pos2, expected in test_cases:
-            result = self.heuristic(pos1, pos2)
-            correct = result == expected
-            all_correct = all_correct and correct
-            status = "✓" if correct else "✗"
-            print(f"  {status} {pos1} to {pos2}: {result} (expected {expected})")
+        # Create start node and add to open set
+        start_g_cost = 0  # Cost from start to start is 0
+        start_h_cost = self.heuristic(start, goal)  # Heuristic cost to goal
+        start_node = Node(start[0], start[1], start_g_cost, start_h_cost)
         
-        print(f"\nAll tests {'PASSED' if all_correct else 'FAILED'}")
+        # Add start node to open set
+        self.add_to_open_set(open_set, start_node)
         
-        # Test 3: Check all neighbors from current position
-        if wrld.exitcell:
-            exit_x, exit_y = wrld.exitcell
-            print(f"\nNeighbor distances from ({character.x}, {character.y}) to exit ({exit_x}, {exit_y}):")
+        # Main A* search loop
+        while open_set:
+            # Get the best node (lowest f_cost)
+            current_node = self.get_best_node(open_set)
+            if not current_node:
+                break
+                
+            # Check if we reached the goal
+            if (current_node.x, current_node.y) == goal:
+                # Reconstruct path from goal to start
+                path = self.reconstruct_path(current_node)
+                return path
+            
+            # Add current position to closed set
+            closed_set.add((current_node.x, current_node.y))
+            
+            # Explore neighbors
             for dx, dy in self.get_neighbors():
-                new_x, new_y = character.x + dx, character.y + dy
-                if 0 <= new_x < wrld.width() and 0 <= new_y < wrld.height():
-                    distance = self.heuristic((new_x, new_y), (exit_x, exit_y))
-                    print(f"  ({new_x}, {new_y}): {distance}")
-        
-        print("=== END HEURISTIC TESTING ===\n")
-
+                neighbor_x = current_node.x + dx
+                neighbor_y = current_node.y + dy
+                neighbor_pos = (neighbor_x, neighbor_y)
+                
+                # Skip if not valid position
+                if not self.is_valid_position(wrld, neighbor_x, neighbor_y):
+                    continue
+                
+                # Skip if already explored
+                if neighbor_pos in closed_set:
+                    continue
+                
+                # Calculate costs for this neighbor
+                neighbor_g_cost = current_node.g_cost + 1  # Each move costs 1
+                neighbor_h_cost = self.heuristic(neighbor_pos, goal)
+                neighbor_node = Node(neighbor_x, neighbor_y, neighbor_g_cost, neighbor_h_cost, current_node)
+                
+                # Add to open set
+                self.add_to_open_set(open_set, neighbor_node)
+            
+        # No path found
+        return None
+    
+    
+    
