@@ -13,7 +13,7 @@ class TestCharacter(CharacterEntity):
     # Initial state!
     # (I want to add more states in the future...)
     state = "goal"
-    search_depth = 4
+    search_depth = 3
 
     action = "move"
 
@@ -61,7 +61,7 @@ class TestCharacter(CharacterEntity):
          for key in wrld.monsters:
             for mon in wrld.monsters[key]:
                 mon_dist = math.sqrt((((mon.x) - wrld.me(self).x)**2) + (((mon.y) - wrld.me(self).y)**2))
-                if (mon_dist <= 5):
+                if (mon_dist <= 3.5):
                     self.state = "mon dodge"
                 else:
                     self.state = "goal"
@@ -88,20 +88,22 @@ class TestCharacter(CharacterEntity):
                         if(bomberman.y + posy_y >= 0) and (bomberman.y + posy_y < wrld.height()):
                             if not wrld.wall_at((bomberman.x + posy_x), (bomberman.y + posy_y)):
                                 bomberman.move(posy_x, posy_y)
-                                move_points = self.expval(new_wrld.next()[0], new_wrld.next()[1], (depth - 1))
-                                print("Points are: ", move_points)
-                                if move_points > top_score:
+                                next_wrld = wrld.next()
+                                move_points = self.expval(next_wrld[0], next_wrld[1], (depth - 1))
+                                print("Points for (", posy_x, ", ", posy_y, ") are: ", move_points)
+
+                                if move_points >= top_score:
                                     top_score = move_points
                                     self.dx = posy_x
                                     self.dy = posy_y
 
         print("Top Score: ", top_score)
-        
 
     def expval(self, wrld, events, depth):
         # If the character has died or found the goal, calculate the utility
-        if (wrld.me(self) == None):
-            return -9999.0 * (depth + 1)
+        bomberman = wrld.me(self)
+        if (bomberman == None):
+            return -10.0 * (depth + 1)
         
         if (len(events) > 0):
             for event in events:
@@ -126,15 +128,18 @@ class TestCharacter(CharacterEntity):
                     for posy_y in [-1, 0, 1]:
                         if (posy_x != 0) and (posy_y != 0):
                             if (mon.x + posy_x >= 0) and (mon.x + posy_x < wrld.width()):
-                                if(mon.y + posy_y >= 0) or (mon.y + posy_y < wrld.height()):
+                                if(mon.y + posy_y >= 0) and (mon.y + posy_y < wrld.height()):
                                     if not wrld.wall_at((mon.x + posy_x), (mon.y + posy_y)):
                                         # Calculate the distance between the monster and the character after the move
-                                        char_dist = math.sqrt((((mon.x + posy_x) - wrld.me(self).x)**2) + (((mon.y + posy_y) - wrld.me(self).y)**2))
+                                        # char_dist = math.sqrt((((mon.x + posy_x) - wrld.me(self).x)**2) + (((mon.y + posy_y) - wrld.me(self).y)**2))
+                                        char_dist = abs(mon.x - bomberman.x) + abs(mon.y - bomberman.y)
+                                        # self.char_to_mon_dist(wrld, mon)
 
                                         # If the monster is more than three squares away, then it can be ignored
                                         if (char_dist >= math.sqrt(18.0)):
                                             # Calculate the score based off of that
-                                            dist_score = 1.0 / (char_dist + 0.001)
+                                            dist_score = 1.0 / ((char_dist) + 0.001)
+
                                             # Add this to the scores for all the moves
                                             moves.append(dist_score)
 
@@ -145,7 +150,8 @@ class TestCharacter(CharacterEntity):
                                             worlds.append(new_wrld)
 
                 if (len(moves) == 0):
-                    return self.maxval(wrld.next()[0], wrld.next()[1], (depth - 1))
+                    next_wrld = wrld.next()
+                    return self.maxval(next_wrld[0], next_wrld[1], (depth - 1))
                 
                 total_move_score = sum(moves)
 
@@ -154,21 +160,23 @@ class TestCharacter(CharacterEntity):
                 # (The player assumes that the monsters are more likely to move towards them)
                 for i in range(len(moves)):
                     proby = moves[i] / total_move_score
-                    new_wrld = worlds[i].next()[0]
-                    new_events = worlds[i].next()[1]
+                    wrldy = worlds[i]
+                    new_wrld = wrldy
+                    new_events = wrldy.events
 
                     # Move on to the next step!
                     v = v + (proby * self.maxval(new_wrld, new_events, (depth - 1)))
 
         if (v == 0):
-            v = v + self.maxval(wrld.next()[0],  wrld.next()[1], (depth - 1))
+            next_wrld = wrld.next()
+            v = v + self.maxval(next_wrld[0],  next_wrld[1], (depth - 1))
 
         return v
     
     def maxval(self, wrld, events, depth):
         bomberman = wrld.me(self)
         if (bomberman == None):
-            return -9999.0 * (depth + 1)
+            return -10.0 * (depth + 1)
         
         if (len(events) > 0):
             for event in events:
@@ -192,18 +200,23 @@ class TestCharacter(CharacterEntity):
                                 baby_bomber = new_wrld.me(self)
                                 baby_bomber.move(posy_x, posy_y)
                                 # Move on to the next step!
-                                v = max(v, self.expval(new_wrld.next()[0], new_wrld.next()[1], (depth - 1)))
+                                next_wrld = new_wrld.next()
+                                v = max(v, self.expval(next_wrld[0], next_wrld[1], (depth - 1)))
         
         return v
     
 
     def state_utility(self, wrld, events, depth):
+        bomberman = wrld.me(self)
+        if (bomberman == None):
+            return -10.0 * (depth + 1)
+        
         if (len(events) > 0):
             for event in events:
                 if ((3 == event.tpe) or
                     (2 == event.tpe)):
                     # If the character has died, return a big negative reward!
-                    return -9999.0 * (depth + 1)
+                    return -10.0 * (depth + 1)
                 elif (self.state == 'goal'):
                     # If the goal is found, return a big reward!
                     # (Multiply it by the depth so that lower depths are better)
@@ -213,21 +226,30 @@ class TestCharacter(CharacterEntity):
         else:
             
             # Calculate the distance to the exit from the current cell
-            exit_dist = (math.sqrt(((self.exitie[0] - wrld.me(self).x)**2) + ((self.exitie[1] - wrld.me(self).y)**2)))
+            exit_dist = (math.sqrt(((self.exitie[0] - bomberman.x)**2) + ((self.exitie[1] - bomberman.y)**2)))
 
-            pathy_len = len(self.a_star(wrld, wrld.me(self).x, wrld.me(self).y))
+            print("     Exit Dist: ", exit_dist)
+
+            pathy_len = len(self.a_star(wrld, bomberman.x, bomberman.y))
+            print("     Path Len: ", pathy_len)
 
             # Calculate the distance of the closest monster
-            closey_mon = math.sqrt((wrld.height()**2) + (wrld.width()**2)) + 0.5
+            closey_mon = 100
             for key in wrld.monsters:
                 for mon in wrld.monsters[key]:
-                    mon_dist = (math.sqrt(((mon.x - wrld.me(self).x)**2) + ((mon.y - wrld.me(self).y)**2)))
+                    mon_dist = abs(mon.x - bomberman.x) + abs(mon.y - bomberman.y)
+                    print("     Mon Dist:", mon_dist)
                     if (closey_mon > mon_dist):
                         closey_mon = mon_dist
+
+                    if closey_mon < 3.0:
+                        return -10.0
+
                         
             # Get the total value
-            # return  (1.0 *-exit_dist) - (0.5 * closey_mon) - self.num_steps
-            return  (0.75 * -pathy_len) - (0.5 * closey_mon) - self.num_steps
+            return  (3.5 * -pathy_len) + (2.5 * closey_mon) - (3.5 * exit_dist) - self.num_steps
+
+
         
 
 ######################################################
