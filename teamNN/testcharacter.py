@@ -13,7 +13,7 @@ class TestCharacter(CharacterEntity):
     # Initial state!
     # (I want to add more states in the future...)
     state = "goal"
-    search_depth = 3
+    search_depth = 4
 
     action = "move"
 
@@ -41,10 +41,10 @@ class TestCharacter(CharacterEntity):
 
         self.num_steps = self.num_steps + 1
 
-        if (self.state == "mon dodge"):
-            time.sleep(0.1)
-        else:
-            time.sleep(0.1)
+        # if (self.state == "mon dodge"):
+        #     time.sleep(0.1)
+        # else:
+        #     time.sleep(0.1)
 
 
     # Find the exit!
@@ -90,14 +90,12 @@ class TestCharacter(CharacterEntity):
                                 bomberman.move(posy_x, posy_y)
                                 next_wrld = wrld.next()
                                 move_points = self.expval(next_wrld[0], next_wrld[1], (depth - 1))
-                                print("Points for (", posy_x, ", ", posy_y, ") are: ", move_points)
 
                                 if move_points >= top_score:
                                     top_score = move_points
                                     self.dx = posy_x
                                     self.dy = posy_y
 
-        print("Top Score: ", top_score)
 
     def expval(self, wrld, events, depth):
         # If the character has died or found the goal, calculate the utility
@@ -189,6 +187,7 @@ class TestCharacter(CharacterEntity):
         
         v = -math.inf 
 
+        # Loop through all the possible moves Bomberman can make
         for posy_x in [-1, 0, 1]:
             if (bomberman.x + posy_x >= 0) and (bomberman.x + posy_x < wrld.width()):
                 for posy_y in [-1, 0, 1]:
@@ -201,6 +200,7 @@ class TestCharacter(CharacterEntity):
                                 baby_bomber.move(posy_x, posy_y)
                                 # Move on to the next step!
                                 next_wrld = new_wrld.next()
+                                # Continue calculating v based on this move
                                 v = max(v, self.expval(next_wrld[0], next_wrld[1], (depth - 1)))
         
         return v
@@ -228,17 +228,14 @@ class TestCharacter(CharacterEntity):
             # Calculate the distance to the exit from the current cell
             exit_dist = (math.sqrt(((self.exitie[0] - bomberman.x)**2) + ((self.exitie[1] - bomberman.y)**2)))
 
-            print("     Exit Dist: ", exit_dist)
-
+            # Calculate the length of the shortest path to the goal
             pathy_len = len(self.a_star(wrld, bomberman.x, bomberman.y))
-            print("     Path Len: ", pathy_len)
 
             # Calculate the distance of the closest monster
             closey_mon = 100
             for key in wrld.monsters:
                 for mon in wrld.monsters[key]:
                     mon_dist = abs(mon.x - bomberman.x) + abs(mon.y - bomberman.y)
-                    print("     Mon Dist:", mon_dist)
                     if (closey_mon > mon_dist):
                         closey_mon = mon_dist
 
@@ -247,7 +244,8 @@ class TestCharacter(CharacterEntity):
 
                         
             # Get the total value
-            return  (3.5 * -pathy_len) + (2.5 * closey_mon) - (3.5 * exit_dist) - self.num_steps
+            # 1.25 → 1.0
+            return  (3.5 * -pathy_len) + (1.0 * closey_mon) - (1.5 * exit_dist) - self.num_steps
 
 
         
