@@ -43,8 +43,8 @@ for i in range(0, 10):
 
 
 ###################### Varaint 2 ######################
-for i in range(0, number_of_games):
-    random.seed(random.randint(0,999))
+for i in range(1, number_of_games + 1):
+    random.seed(i)
     # create the game~
     g = Game.fromfile('map.txt')
 
@@ -65,8 +65,8 @@ for i in range(0, number_of_games):
 
 
 ###################### Varaint 3 ######################
-for i in range(0, number_of_games):
-    random.seed(random.randint(0,999))
+for i in range(1, number_of_games + 1):
+    random.seed(i)
     # create the game~
     g = Game.fromfile('map.txt')
 
@@ -87,8 +87,8 @@ for i in range(0, number_of_games):
 
 
 ###################### Varaint 4 ######################
-for i in range(0, number_of_games):
-    random.seed(random.randint(0,999))
+for i in range(1, number_of_games + 1):
+    random.seed(i)
     # create the game~
     g = Game.fromfile('map.txt')
 
@@ -109,8 +109,8 @@ for i in range(0, number_of_games):
 
 
 ###################### Varaint 5 ######################
-for i in range(0, number_of_games):
-    random.seed(random.randint(0,999))
+for i in range(1, number_of_games + 1):
+    random.seed(i)
     # create the game~
     g = Game.fromfile('map.txt')
 

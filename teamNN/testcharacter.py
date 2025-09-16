@@ -11,36 +11,48 @@ from colorama import Fore, Back
 class TestCharacter(CharacterEntity):
 
     # Initial state!
-    # (I want to add more states in the future...)
+    # (I might want to add more states in the future...)
     state = "goal"
-    search_depth = 4
+    # Change this to determine how deep you want the expectimax search to go
+    search_depth = 3
 
+    # This will track if the agent moves or places a bomb
     action = "move"
 
+    # This will be the location of the exit
     exitie = ()
-    initial_x = 0
-    initial_y = 0
 
+    # This keeps track of how many steps have gone by
     num_steps = 0
 
+    # These are for moving the agent
     dx = 0
     dy = 0
 
     def do(self, wrld):
         # Your code here
+        # Start by checking to see if there are any monsters nearby.
+        # This will determine if the agent does A* or expectimax
         self.mon_checker(wrld.from_world(wrld))
 
         if (self.state == "goal"):
+            # Does A*
             self.a_star_move(wrld.from_world(wrld))
         elif (self.state == "mon dodge"):
+            # Does expectimax
             self.expectimax_search(wrld.from_world(wrld), self.search_depth)
+        
 
+        # Move if the agent has decided to move
+        # (Functionality for placing bombs is currently taken out since it did not work well...)
         if (self.action == "move"):
             self.move(self.dx, self.dy)
             print("dx: ", self.dx, ", dy: ", self.dy)
 
+        # Increment the number of steps
         self.num_steps = self.num_steps + 1
 
+        # Uncomment these if you want to watch the agent go through the process
         # if (self.state == "mon dodge"):
         #     time.sleep(0.1)
         # else:
@@ -57,10 +69,12 @@ class TestCharacter(CharacterEntity):
                 if wrld.exit_at(posy_x, posy_y):
                     self.exitie = (posy_x, posy_y)
 
+    # This will check to see if there are any monsters near the agent
     def mon_checker(self, wrld):
          for key in wrld.monsters:
             for mon in wrld.monsters[key]:
                 mon_dist = math.sqrt((((mon.x) - wrld.me(self).x)**2) + (((mon.y) - wrld.me(self).y)**2))
+                # 3.5 →　4.5
                 if (mon_dist <= 3.5):
                     self.state = "mon dodge"
                 else:
@@ -100,6 +114,7 @@ class TestCharacter(CharacterEntity):
     def expval(self, wrld, events, depth):
         # If the character has died or found the goal, calculate the utility
         bomberman = wrld.me(self)
+        # In case the agent has been killed, this will return the death reward
         if (bomberman == None):
             return -10.0 * (depth + 1)
         
@@ -146,7 +161,8 @@ class TestCharacter(CharacterEntity):
                                             new_mon = new_wrld.monsters[key][0]
                                             new_mon.move(posy_x, posy_y)
                                             worlds.append(new_wrld)
-
+                
+                # If there are no moves found, then the agent can just move on
                 if (len(moves) == 0):
                     next_wrld = wrld.next()
                     return self.maxval(next_wrld[0], next_wrld[1], (depth - 1))
@@ -173,6 +189,7 @@ class TestCharacter(CharacterEntity):
     
     def maxval(self, wrld, events, depth):
         bomberman = wrld.me(self)
+        # In case the agent has been killed, this will return the death reward
         if (bomberman == None):
             return -10.0 * (depth + 1)
         
@@ -239,13 +256,12 @@ class TestCharacter(CharacterEntity):
                     if (closey_mon > mon_dist):
                         closey_mon = mon_dist
 
-                    if closey_mon < 3.0:
+                    if closey_mon < 2.5:
                         return -10.0
 
                         
             # Get the total value
-            # 1.25 → 1.0
-            return  (3.5 * -pathy_len) + (1.0 * closey_mon) - (1.5 * exit_dist) - self.num_steps
+            return  (3.5 * -pathy_len) + (1.125 * closey_mon) - (1.5 * exit_dist) - self.num_steps
 
 
         
