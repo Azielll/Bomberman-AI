@@ -1,6 +1,6 @@
 # This is necessary to find the main code
 import sys
-sys.path.insert(0, '../bomberman')
+sys.path.insert(0, '../Bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
 from colorama import Fore, Back
