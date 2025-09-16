@@ -208,17 +208,16 @@ class TestCharacter(CharacterEntity):
         for posy_x in [-1, 0, 1]:
             if (bomberman.x + posy_x >= 0) and (bomberman.x + posy_x < wrld.width()):
                 for posy_y in [-1, 0, 1]:
-                    if (posy_x != 0) or (posy_y != 0):
-                        if(bomberman.y + posy_y >= 0) and (bomberman.y + posy_y < wrld.height()):
-                            if not wrld.wall_at((bomberman.x + posy_x), (bomberman.y + posy_y)):
-                                # Make a clone of the world and the character
-                                new_wrld = wrld.from_world(wrld)
-                                baby_bomber = new_wrld.me(self)
-                                baby_bomber.move(posy_x, posy_y)
-                                # Move on to the next step!
-                                next_wrld = new_wrld.next()
-                                # Continue calculating v based on this move
-                                v = max(v, self.expval(next_wrld[0], next_wrld[1], (depth - 1)))
+                    if(bomberman.y + posy_y >= 0) and (bomberman.y + posy_y < wrld.height()):
+                        if not wrld.wall_at((bomberman.x + posy_x), (bomberman.y + posy_y)):
+                            # Make a clone of the world and the character
+                            new_wrld = wrld.from_world(wrld)
+                            baby_bomber = new_wrld.me(self)
+                            baby_bomber.move(posy_x, posy_y)
+                            # Move on to the next step!
+                            next_wrld = new_wrld.next()
+                            # Continue calculating v based on this move
+                            v = max(v, self.expval(next_wrld[0], next_wrld[1], (depth - 1)))
         
         return v
     

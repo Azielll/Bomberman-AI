@@ -15,7 +15,7 @@ from testcharacter import TestCharacter
 
 # Number of games you want to test
 # (Change this to change hw many tests you do!)
-number_of_games = 500
+number_of_games = 100
 
 # Tracks the number of wins for each variant
 v1_wins = 0.0
