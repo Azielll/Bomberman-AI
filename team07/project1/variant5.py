@@ -31,6 +31,14 @@ g.add_character(TestCharacter("me", # name
                               "C",  # avatar
                               0, 0  # position
 ))
+# In variant5.py, after creating the game but before running:
+print(f"Game object: {g}")
+print(f"Has ai_characters attribute: {hasattr(g, 'ai_characters')}")
+if hasattr(g, 'ai_characters'):
+    print(f"AI characters list: {g.ai_characters}")
 
+# Also check which game.py is being used:
+import game
+print(f"Game module path: {game.__file__}")
 # Run!
-g.go(200)  
+g.go(1)  

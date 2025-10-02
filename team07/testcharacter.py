@@ -35,7 +35,7 @@ class TestCharacter(CharacterEntity):
                         return AStarAlgorithm()
                     elif 'variant2' in filename.lower():
                         print("Detected Variant 2 - Using A* Algorithm")
-                        return ExpectimaxAlgorithm()
+                        return AStarAlgorithm()
                     elif 'variant3' in filename.lower():
                         print("Detected Variant 3 - Using A* Algorithm")
                         return AStarAlgorithm()
@@ -44,7 +44,7 @@ class TestCharacter(CharacterEntity):
                         return AStarAlgorithm()
                     elif 'variant5' in filename.lower():
                         print("Detected Variant 5 - Using Hybrid A* + Minimax Algorithm")
-                        return HybridAStarMinimax()
+                        return AStarAlgorithm()
                 caller_frame = caller_frame.f_back
         finally:
             del frame
