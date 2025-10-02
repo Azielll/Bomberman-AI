@@ -32,7 +32,7 @@ class TestCharacter(CharacterEntity):
                     # Extract variant number from filename
                     if 'variant1' in filename.lower():
                         print("Detected Variant 1 - Using A* Algorithm")
-                        return ExpectimaxAlgorithm()
+                        return AStarAlgorithm()
                     elif 'variant2' in filename.lower():
                         print("Detected Variant 2 - Using A* Algorithm")
                         return ExpectimaxAlgorithm()

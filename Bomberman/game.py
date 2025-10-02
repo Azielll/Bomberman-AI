@@ -10,7 +10,9 @@ class Game:
     def __init__(self, width, height, max_time, bomb_time, expl_duration, expl_range, sprite_dir="../../bomberman/sprites/"):
         self.world = RealWorld.from_params(width, height, max_time, bomb_time, expl_duration, expl_range)
         self.sprite_dir = sprite_dir
+        self.ai_characters = []  # ADD THIS: Store AI characters
         self.load_gui(width, height)
+
 
     @classmethod
     def fromfile(cls, fname, sprite_dir="../../bomberman/sprites/"):
@@ -111,7 +113,67 @@ class Game:
             self.draw()
             step()
             self.world.next_decisions()
+         # === ADD GAME END HOOK HERE ===
+        print("Game ended - calling final AI updates...")
+        self.notify_game_end()
         colorama.deinit()
+
+    def notify_game_end(self):
+        """Notify all AI characters that the game has ended"""
+        # Determine game result
+        game_result = self.get_game_result()
+        print(f"DEBUG: Detected game result: {game_result}")
+        
+        # Use stored AI character references instead of world.characters
+        found_ai = False
+        for character in self.ai_characters:  # CHANGED: Use stored references
+            if hasattr(character, 'algorithm') and hasattr(character.algorithm, 'on_game_end'):
+                print(f"DEBUG: Calling on_game_end for {character}")
+                found_ai = True
+                try:
+                    character.algorithm.on_game_end(game_result, self.world, character)
+                except Exception as e:
+                    print(f"Error notifying character AI: {e}")
+        
+        if not found_ai:
+            print("DEBUG: No AI characters found to notify")
+
+    def get_game_result(self):
+        """Determine how the game ended"""
+        # Check events for exit found
+        for event in self.events:
+            if hasattr(event, 'tpe') and 'found the exit' in str(event):
+                return "WIN"
+            # You might need to adjust this based on actual event structure
+        
+        # Check the last printed events (since "me found the exit" was printed)
+        # This is a fallback method
+        
+        # Time ran out
+        if self.world.time <= 0:
+            return "TIMEOUT"
+        
+        # No characters left (died)
+        if not self.world.characters:
+            # If we got here and it wasn't timeout, probably won
+            # (since character was removed after reaching exit)
+            if self.world.time > 0:
+                return "WIN"
+            return "DEATH"
+        
+        # Default
+        return "UNKNOWN"
+        
+        # Time ran out
+        if self.world.time <= 0:
+            return "TIMEOUT"
+        
+        # No characters left (died)
+        if not self.world.characters:
+            return "DEATH"
+        
+        # Default
+        return "UNKNOWN"
 
     ###################
     # Private methods #
@@ -145,3 +207,6 @@ class Game:
 
     def add_character(self, c):
         self.world.add_character(c)
+        # Store reference to AI characters
+        if hasattr(c, 'algorithm'):
+            self.ai_characters.append(c)  # ADD THIS
