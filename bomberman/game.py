@@ -146,6 +146,10 @@ class Game:
                 return "WIN"
             # You might need to adjust this based on actual event structure
         
+        for event in self.events:
+            if hasattr(event, 'tpe') and 'killed' in str(event):
+                return "DEATH"
+            
         # Check the last printed events (since "me found the exit" was printed)
         # This is a fallback method
         

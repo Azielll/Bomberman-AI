@@ -65,7 +65,7 @@ class QLearningWeights:
         features = []
         for d in distances:
             if d == float('inf'):
-                features.append(0.0)
+                features.append(1.0)
             else:
                 features.append(1.0 / (1.0 + d))  # Higher value for closer distance
         return features
@@ -73,7 +73,7 @@ class QLearningWeights:
     def calculate_q_value(self, distances):
         """Calculate Q-value: Q = w1*f1 + w2*f2 + w3*f3"""
         features = self.get_features(distances)
-        q_value = sum(w * f for w, f in zip(self.weights, features))
+        q_value = sum(w * f for w, f in zip(self.weights, features)) + distances[1]
         return q_value
     
     def update_weights(self, last_distances, reward, current_distances):

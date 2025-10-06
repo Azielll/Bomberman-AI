@@ -3,6 +3,7 @@ A* pathfinding algorithm for Bomberman AI
 """
 from .base import BombermanAlgorithm
 import heapq
+import math
 
 class Node:
     """Node for A* pathfinding"""
@@ -474,6 +475,7 @@ class AStarAlgorithm(BombermanAlgorithm):
                 
                 # Add to open set
                 self.add_to_open_set(open_set, neighbor_node)
+                print(f"🧠 Neighbor Q-value: {self.q_weights.calculate_q_value(neighbor_distances):.3f}")
             
         # No path found
         return None

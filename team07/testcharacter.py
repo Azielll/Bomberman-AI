@@ -15,6 +15,7 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
         # Choose algorithm based on variant
         self.algorithm = self._choose_algorithm()
+        self.timer = 0
     
     def _choose_algorithm(self):
         """Choose algorithm based on the variant being run."""
@@ -62,6 +63,10 @@ class TestCharacter(CharacterEntity):
     def do(self, wrld):
         # Get action from algorithm
         dx, dy = self.algorithm.get_action(wrld, self)
-        
+
+        if self.timer % 10 == 0:
+            self.place_bomb()
+
+        self.timer += 1
         # Execute the movement
         self.move(dx, dy)
