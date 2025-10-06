@@ -206,6 +206,8 @@ class AStarAlgorithm(BombermanAlgorithm):
         # 4. Store current state for next Q-learning update
         self.last_distances = current_distances
         self.last_position = current_position
+
+        self.q_weights.save_weights()
         
         # === Q-LEARNING ENHANCED PATHFINDING ===
         
