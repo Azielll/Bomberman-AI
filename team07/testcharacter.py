@@ -9,18 +9,21 @@ from algorithms.astar import AStarAlgorithm
 from algorithms.expectimax import ExpectimaxAlgorithm
 from algorithms.minimax import MinimaxAlgorithm
 from algorithms.local_search import LocalSearchAlgorithm
+from algorithms.Qlearning import QLearningAlgorithm
 
 class TestCharacter(CharacterEntity):
     def __init__(self, name, avatar, x, y):
         super().__init__(name, avatar, x, y)
         # Choose algorithm based on variant
         self.algorithm = self._choose_algorithm()
+        self.first_do = True
     
     def _choose_algorithm(self):
         """Choose algorithm based on the variant being run."""
         import inspect
         import sys
         
+        return QLearningAlgorithm()
         # Get the calling file name to determine variant
         frame = inspect.currentframe()
         try:
@@ -31,20 +34,15 @@ class TestCharacter(CharacterEntity):
                 if 'variant' in filename.lower():
                     # Extract variant number from filename
                     if 'variant1' in filename.lower():
-                        print("Detected Variant 1 - Using A* Algorithm")
-                        return ExpectimaxAlgorithm()
+                        return QLearningAlgorithm()
                     elif 'variant2' in filename.lower():
-                        print("Detected Variant 2 - Using A* Algorithm")
-                        return ExpectimaxAlgorithm()
+                        return QLearningAlgorithm()
                     elif 'variant3' in filename.lower():
-                        print("Detected Variant 3 - Using A* Algorithm")
-                        return AStarAlgorithm()
+                        return QLearningAlgorithm()
                     elif 'variant4' in filename.lower():
-                        print("Detected Variant 4 - Using A* Algorithm")
-                        return AStarAlgorithm()
+                        return QLearningAlgorithm()
                     elif 'variant5' in filename.lower():
-                        print("Detected Variant 5 - Using Hybrid A* + Minimax Algorithm")
-                        return HybridAStarMinimax()
+                        return QLearningAlgorithm()
                 caller_frame = caller_frame.f_back
         finally:
             del frame
@@ -60,8 +58,16 @@ class TestCharacter(CharacterEntity):
         return AStarAlgorithm()
     
     def do(self, wrld):
+        if (self.first_do):
+            print("Learning!")
+            self.algorithm.initial_learning(wrld, self)
+            self.first_do = False
         # Get action from algorithm
         dx, dy = self.algorithm.get_action(wrld, self)
         
-        # Execute the movement
-        self.move(dx, dy)
+        if ((dx == -999) and (dy == -999)):
+            self.place_bomb()
+            self.move(0, 0)
+        else:
+            # Execute the movement
+            self.move(dx, dy)
