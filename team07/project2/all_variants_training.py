@@ -13,171 +13,191 @@ from monsters.selfpreserving_monster import SelfPreservingMonster
 sys.path.insert(1, '../teamNN')
 from testcharacter import TestCharacter
 
-# Create the game
-rounds = 10  # 10 rounds for better statistics
-variant_names = ["Variant 1 (Solo)", "Variant 2 (Stupid Monster)", "Variant 3 (Self-Preserving)", "Variant 4 (Aggressive)", "Variant 5 (Multiple Monsters)"]
-success_counts = [0, 0, 0, 0, 0]  # Track wins for each variant
+# Number of games you want to test
+# (Change this to change how many tests you do!)
+number_of_games = 10  # Reduced for detailed analysis
 
-print("=" * 60)
-print("Q-LEARNING TRAINING WITH SUCCESS RATE TRACKING")
-print("=" * 60)
+# Tracks the number of wins for each variant
+v1_wins = 0.0
+v2_wins = 0.0
+v3_wins = 0.0
+v4_wins = 0.0
+v5_wins = 0.0
 
-for i in range(0, rounds):
-    print(f"\n--- ROUND {i+1}/{rounds} ---")
-    random.seed(random.randint(1, 99999))
-    
-    ###############################################################################
-    # Variant 1
-    print(f"\nRunning {variant_names[0]}...")
+print("Enhanced A* Algorithm - Comprehensive Testing")
+print("=" * 50)
+print(f"Testing {number_of_games} games per variant...")
+print("=" * 50)
+
+###################### Variant 1 ######################
+print("Testing Variant 1 (Basic)...")
+for i in range(0, number_of_games):
+    # create the game~
     g = Game.fromfile('map.txt')
-    g.add_character(TestCharacter("me", # name
-                                "C",  # avatar
-                                0, 0  # position
-    ))
-    g.go(500)  # Increased to 500 steps for more time
-    
-    # Check if character escaped (found exit) - look for CHARACTER_FOUND_EXIT event
-    success = False
-    for event in g.world.events:
-        if hasattr(event, 'tpe') and event.tpe == 4:  # CHARACTER_FOUND_EXIT
-            success = True
-            break
-    
-    if success:
-        success_counts[0] += 1
-        print(f"✓ {variant_names[0]}: SUCCESS!")
-    else:
-        print(f"✗ {variant_names[0]}: FAILED")
 
-    ###############################################################################
-    # Variant 2
-    print(f"\nRunning {variant_names[1]}...")
+    # add the test character~
+    g.add_character(TestCharacter("me", "C", 0, 0))
+    
+    # run the game~
+    g.go(1)
+
+    # check the events in the finished game
+    if len(g.world.events) >= 0:
+        for event in g.world.events:
+            if (4 == event.tpe):
+                v1_wins = v1_wins + 1.0
+
+###################### Variant 2 ######################
+print("Testing Variant 2 (Aggressive Monster)...")
+v2_details = []
+for i in range(0, number_of_games):
+    random.seed(random.randint(0,999))
+    # create the game~
     g = Game.fromfile('map.txt')
-    g.add_monster(StupidMonster("stupid", # name
-                                "S",      # avatar
-                                3, 9      # position
-    ))
-    g.add_character(TestCharacter("me", # name
-                                "C",  # avatar
-                                0, 0  # position
-    ))
-    g.go(500)  # Increased to 500 steps for more time
-    
-    # Check if character escaped (found exit) - look for CHARACTER_FOUND_EXIT event
-    success = False
-    for event in g.world.events:
-        if hasattr(event, 'tpe') and event.tpe == 4:  # CHARACTER_FOUND_EXIT
-            success = True
-            break
-    
-    if success:
-        success_counts[1] += 1
-        print(f"✓ {variant_names[1]}: SUCCESS!")
-    else:
-        print(f"✗ {variant_names[1]}: FAILED")
 
-    ###############################################################################
-    # Variant 3
-    print(f"\nRunning {variant_names[2]}...")
+    # add the monster~ 
+    g.add_monster(StupidMonster("stupid", "S", 3, 9))
+
+    # add the test character~
+    g.add_character(TestCharacter("me", "C", 0, 0))
+    
+    # run the game~
+    g.go(1)
+
+    # check the events in the finished game
+    won = False
+    death_cause = "timeout"
+    if len(g.world.events) >= 0:
+        for event in g.world.events:
+            if (4 == event.tpe):
+                v2_wins = v2_wins + 1.0
+                won = True
+            elif (2 == event.tpe):  # Character killed
+                death_cause = "killed by monster"
+    
+    v2_details.append(f"Game {i+1}: {'WON' if won else 'LOST'} - {death_cause}")
+
+###################### Variant 3 ######################
+print("Testing Variant 3 (Multiple Monsters)...")
+for i in range(0, number_of_games):
+    random.seed(random.randint(0,999))
+    # create the game~
     g = Game.fromfile('map.txt')
-    g.add_monster(SelfPreservingMonster("selfpreserving", # name
-                                        "S",              # avatar
-                                        3, 9,             # position
-                                        1                 # detection range
-    ))
-    g.add_character(TestCharacter("me", # name
-                                "C",  # avatar
-                                0, 0  # position
-    ))
-    g.go(500)  # Increased to 500 steps for more time
-    
-    # Check if character escaped (found exit) - look for CHARACTER_FOUND_EXIT event
-    success = False
-    for event in g.world.events:
-        if hasattr(event, 'tpe') and event.tpe == 4:  # CHARACTER_FOUND_EXIT
-            success = True
-            break
-    
-    if success:
-        success_counts[2] += 1
-        print(f"✓ {variant_names[2]}: SUCCESS!")
-    else:
-        print(f"✗ {variant_names[2]}: FAILED")
 
-    ###############################################################################
-    # Variant 4
-    print(f"\nRunning {variant_names[3]}...")
+    # add the monster~
+    g.add_monster(SelfPreservingMonster("selfpreserving", "S", 3, 9, 1))
+
+    # add the test character~
+    g.add_character(TestCharacter("me", "C", 0, 0))
+    
+    # run the game~
+    g.go(1)
+
+    # check the events in the finished game
+    if len(g.world.events) >= 0:
+        for event in g.world.events:
+            if (4 == event.tpe):
+                v3_wins = v3_wins + 1.0
+
+###################### Variant 4 ######################
+print("Testing Variant 4 (Complex Maze)...")
+v4_details = []
+for i in range(0, number_of_games):
+    random.seed(random.randint(0,999))
+    # create the game~
     g = Game.fromfile('map.txt')
-    g.add_monster(SelfPreservingMonster("aggressive", # name
-                                        "A",          # avatar
-                                        3, 13,        # position
-                                        2             # detection range
-    ))
-    g.add_character(TestCharacter("me", # name
-                                "C",  # avatar
-                                0, 0  # position
-    ))
-    g.go(500)  # Increased to 500 steps for more time
+
+    # add the monster~
+    g.add_monster(SelfPreservingMonster("aggresive", "A", 7, 13, 2))
+
+    # add the test character~
+    g.add_character(TestCharacter("me", "C", 0, 0))
     
-    # Check if character escaped (found exit) - look for CHARACTER_FOUND_EXIT event
-    success = False
-    for event in g.world.events:
-        if hasattr(event, 'tpe') and event.tpe == 4:  # CHARACTER_FOUND_EXIT
-            success = True
-            break
+    # run the game~
+    g.go(1)
+
+    # check the events in the finished game
+    won = False
+    death_cause = "timeout"
+    if len(g.world.events) >= 0:
+        for event in g.world.events:
+            if (4 == event.tpe):
+                v4_wins = v4_wins + 1.0
+                won = True
+            elif (2 == event.tpe):  # Character killed
+                death_cause = "killed by monster"
     
-    if success:
-        success_counts[3] += 1
-        print(f"✓ {variant_names[3]}: SUCCESS!")
-    else:
-        print(f"✗ {variant_names[3]}: FAILED")
-    
-    ###############################################################################
-    # Variant 5
-    print(f"\nRunning {variant_names[4]}...")
+    v4_details.append(f"Game {i+1}: {'WON' if won else 'LOST'} - {death_cause}")
+
+###################### Variant 5 ######################
+print("Testing Variant 5 (Multiple Aggressive)...")
+v5_details = []
+for i in range(0, number_of_games):
+    random.seed(random.randint(0,999))
+    # create the game~
     g = Game.fromfile('map.txt')
-    g.add_monster(StupidMonster("stupid", # name
-                            "S",      # avatar
-                            3, 5,     # position
-    ))
-    g.add_monster(SelfPreservingMonster("aggressive", # name
-                                    "A",          # avatar
-                                    3, 13,        # position
-                                    2             # detection range
-    ))
-    g.add_character(TestCharacter("me", # name
-                                "C",  # avatar
-                                0, 0  # position
-    ))
-    g.go(500)  # Increased to 500 steps for more time
+
+    # add the monsters~
+    g.add_monster(StupidMonster("stupid", "S", 3, 9))
+    g.add_monster(SelfPreservingMonster("aggresive", "A", 7, 13, 1))
+
+    # add the test character~
+    g.add_character(TestCharacter("me", "C", 0, 0))
     
-    # Check if character escaped (found exit) - look for CHARACTER_FOUND_EXIT event
-    success = False
-    for event in g.world.events:
-        if hasattr(event, 'tpe') and event.tpe == 4:  # CHARACTER_FOUND_EXIT
-            success = True
-            break
+    # run the game~
+    g.go(1)
+
+    # check the events in the finished game
+    won = False
+    death_cause = "timeout"
+    if len(g.world.events) >= 0:
+        for event in g.world.events:
+            if (4 == event.tpe):
+                v5_wins = v5_wins + 1.0
+                won = True
+            elif (2 == event.tpe):  # Character killed
+                death_cause = "killed by monster"
     
-    if success:
-        success_counts[4] += 1
-        print(f"✓ {variant_names[4]}: SUCCESS!")
-    else:
-        print(f"✗ {variant_names[4]}: FAILED")
+    v5_details.append(f"Game {i+1}: {'WON' if won else 'LOST'} - {death_cause}")
 
-# Print final statistics
-print("\n" + "=" * 60)
-print("FINAL SUCCESS RATE STATISTICS")
-print("=" * 60)
-for i, variant_name in enumerate(variant_names):
-    success_rate = (success_counts[i] / rounds) * 100
-    status = "✓ PASS" if success_rate >= 50 else "✗ FAIL"
-    print(f"{variant_name}: {success_counts[i]}/{rounds} ({success_rate:.1f}%) {status}")
+# Calculate win percentages
+v1_win_pa = (v1_wins / 10) * 100
+v2_win_pa = (v2_wins / number_of_games) * 100
+v3_win_pa = (v3_wins / number_of_games) * 100
+v4_win_pa = (v4_wins / number_of_games) * 100
+v5_win_pa = (v5_wins / number_of_games) * 100
 
-print("\n" + "=" * 60)
-print("OVERALL PERFORMANCE")
-print("=" * 60)
-total_successes = sum(success_counts)
-overall_rate = (total_successes / (rounds * 5)) * 100
-print(f"Total Successes: {total_successes}/{rounds * 5} ({overall_rate:.1f}%)")
-print(f"Variants Above 50%: {sum(1 for count in success_counts if (count/rounds) >= 0.5)}/5")
+print("\n" + "=" * 50)
+print("ENHANCED A* ALGORITHM RESULTS")
+print("=" * 50)
+print(f"Variant 1  Win Rate: {v1_win_pa:.1f}%")
+print(f"Variant 2  Win Rate: {v2_win_pa:.1f}%")
+print(f"Variant 3  Win Rate: {v3_win_pa:.1f}%")
+print(f"Variant 4  Win Rate: {v4_win_pa:.1f}%")
+print(f"Variant 5  Win Rate: {v5_win_pa:.1f}%")
+print("=" * 50)
 
+# Calculate overall performance
+total_games = 10 + (number_of_games * 4)
+total_wins = v1_wins + v2_wins + v3_wins + v4_wins + v5_wins
+overall_win_rate = (total_wins / total_games) * 100
+
+print(f"Overall Win Rate: {overall_win_rate:.1f}%")
+print(f"Total Games: {total_games}")
+print(f"Total Wins: {int(total_wins)}")
+print("=" * 50)
+
+# Detailed analysis for failing variants
+print("\nDETAILED ANALYSIS:")
+print("=" * 50)
+print("Variant 2 Details:")
+for detail in v2_details:
+    print(f"  {detail}")
+
+print("\nVariant 4 Details:")
+for detail in v4_details:
+    print(f"  {detail}")
+
+print("\nVariant 5 Details:")
+for detail in v5_details:
+    print(f"  {detail}")

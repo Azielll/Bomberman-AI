@@ -330,7 +330,7 @@ class QLearningAlgorithm(BombermanAlgorithm):
         # get the weights from the txt file
         self.load_weights()
 
-        while (steps < 50):
+        while (steps < 1000):
             worldy = wrld.from_world(wrld)
             bomberman = worldy.me(character)
             self.x = bomberman.x
